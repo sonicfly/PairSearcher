@@ -3,6 +3,8 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Scanner;
 
 public class PairSearcher {
@@ -19,12 +21,13 @@ public class PairSearcher {
         Data data = new Data();
         data.readFromFile(fileName);
 
-        int depth = data.findPair(x, y);
-        if (depth == 0) {
+        int[] depth = data.findPair(x, y);
+        if (depth == null) {
             System.out.println("Cannot find X and Y on the same level.");
             return;
         } else {
-            System.out.println("Minimum depth of level containing X and Y: " + depth);
+            System.out.println("Minimum depth of level containing X and Y: " + depth[0]);
+            System.out.println("Maximum depth of level containing X and Y: " + depth[1]);
         }
     }
 }
@@ -46,6 +49,12 @@ class Data {
         root = null;
     }
 
+    public static List<Integer> union(List<Integer> list1, List<Integer> list2) {
+        Set<Integer> set = new HashSet<>(list1);
+        set.retainAll(list2);
+        return new ArrayList<Integer>(set);
+    }
+
     Node insertLevelOrder(int[] arr, Node root, int i, int n) {
         if (i < n) {
             Node temp = new Node(arr[i]);
@@ -57,7 +66,7 @@ class Data {
         return root;
     }
 
-    int findPair(int x, int y) {
+    int[] findPair(int x, int y) {
         List<Integer> depthValueX = new ArrayList<>();
         List<Integer> depthValueY = new ArrayList<>();
         
@@ -66,12 +75,15 @@ class Data {
         findDepth(root, y, 1, depthValueY);
         Collections.sort(depthValueY);
 
-        for (Integer num : depthValueX) {
-            if (depthValueY.contains(num)) {
-                return num;
-            }
+        List<Integer> depth = union(depthValueX, depthValueY);
+        if (depth.size() == 0) {
+            return null; // No match found
         }
-        return 0; // No match found 
+
+        int[] result = new int[2];
+        result[0] = depth.get(0);
+        result[1] = depth.get(depth.size() - 1);
+        return result;
     }
 
     void findDepth(Node node, int x, int level, List<Integer> result) {
